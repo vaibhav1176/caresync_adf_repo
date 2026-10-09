@@ -28,7 +28,7 @@
 					},
 					"url": "https://prod-08.centralindia.logic.azure.com:443/workflows/1c4a4dc698e747a98d10bbd418b04c5a/triggers/When_an_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_an_HTTP_request_is_received%2Frun&sv=1.0&sig=2vtaCiIX64ZtOxDT2Pj7MVKuEvOyp0sDTYNouHO6VEY",
 					"body": {
-						"value": "{\"tableName\": \"@{pipeline().parameters.tableName}\"}",
+						"value": "@variables('logic_apps_body')",
 						"type": "Expression"
 					}
 				}
