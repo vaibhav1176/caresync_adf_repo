@@ -133,7 +133,8 @@
 						"email_receipt": {
 							"value": "@pipeline().parameters.email_receipt_pipeline",
 							"type": "Expression"
-						}
+						},
+						"status": "Success"
 					}
 				}
 			},
