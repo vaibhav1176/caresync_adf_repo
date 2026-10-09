@@ -24,7 +24,11 @@
 					},
 					"dataset": {
 						"referenceName": "DS_Azure_SQL",
-						"type": "DatasetReference"
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaName": "dbo",
+							"tableName": "Customers"
+						}
 					},
 					"firstRowOnly": false
 				}
