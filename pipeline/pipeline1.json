@@ -55,7 +55,7 @@
 						"parameters": {
 							"schemaName": "dbo",
 							"tableName": {
-								"value": "@pipeline().parameters.table_name",
+								"value": "@pipeline().parameters.table_name_pipeline",
 								"type": "Expression"
 							}
 						}
@@ -67,7 +67,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"table_name": {
-								"value": "@pipeline().parameters.table_name",
+								"value": "@pipeline().parameters.table_name_pipeline",
 								"type": "Expression"
 							}
 						}
@@ -105,7 +105,7 @@
 				}
 			},
 			{
-				"name": "Email_Pipeline_Trigger",
+				"name": "Success_Email_Pipeline_Trigger",
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
@@ -126,15 +126,60 @@
 					},
 					"waitOnCompletion": true,
 					"parameters": {
-						"tableName": "Products"
+						"tableName": {
+							"value": "@pipeline().parameters.table_name_pipeline",
+							"type": "Expression"
+						},
+						"email_receipt": {
+							"value": "@pipeline().parameters.email_receipt_pipeline",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			{
+				"name": "Failure_Email_Pipeline_Trigger",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Cx table ingest from AS to ADLS",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_EmailDemo",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"tableName": {
+							"value": "@pipeline().parameters.table_name_pipeline",
+							"type": "Expression"
+						},
+						"email_receipt": {
+							"value": "@pipeline().parameters.email_receipt_pipeline",
+							"type": "Expression"
+						},
+						"status": "Failed"
 					}
 				}
 			}
 		],
 		"parameters": {
-			"table_name": {
+			"table_name_pipeline": {
 				"type": "string",
 				"defaultValue": "customers"
+			},
+			"email_receipt_pipeline": {
+				"type": "string",
+				"defaultValue": "vaibhavgupta1176@gmail.com"
 			}
 		},
 		"annotations": []
