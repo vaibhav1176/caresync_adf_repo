@@ -5,7 +5,14 @@
 			{
 				"name": "Cx table ingest from AS to ADLS",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "Read cx table",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -70,8 +77,6 @@
 			{
 				"name": "Read cx table",
 				"type": "Lookup",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -97,6 +102,32 @@
 						}
 					},
 					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "Email_Pipeline_Trigger",
+				"type": "ExecutePipeline",
+				"dependsOn": [
+					{
+						"activity": "Cx table ingest from AS to ADLS",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"pipeline": {
+						"referenceName": "PL_EmailDemo",
+						"type": "PipelineReference"
+					},
+					"waitOnCompletion": true,
+					"parameters": {
+						"tableName": "Products"
+					}
 				}
 			}
 		],
