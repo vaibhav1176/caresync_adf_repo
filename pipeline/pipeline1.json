@@ -131,7 +131,7 @@
 							"type": "Expression"
 						},
 						"email_receipt": {
-							"value": "@pipeline().parameters.email_receipt_pipeline",
+							"value": "@pipeline().globalParameters.email_recepient_global",
 							"type": "Expression"
 						},
 						"status": "Success"
@@ -165,7 +165,7 @@
 							"type": "Expression"
 						},
 						"email_receipt": {
-							"value": "@pipeline().parameters.email_receipt_pipeline",
+							"value": "@pipeline().globalParameters.email_recepient_global",
 							"type": "Expression"
 						},
 						"status": "Failed"
