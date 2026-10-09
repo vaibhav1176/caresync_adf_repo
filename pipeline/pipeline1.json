@@ -3,10 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Copy data1",
+				"name": "Cx table ingest from AS to ADLS",
 				"type": "Copy",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -18,17 +16,20 @@
 				"userProperties": [],
 				"typeProperties": {
 					"source": {
-						"type": "PostgreSqlV2Source",
-						"query": "select * from public.patients;",
-						"queryTimeout": "02:00:00"
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": "select * from dbo.customers where CustomerID >2",
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
 					},
 					"sink": {
-						"type": "ParquetSink",
+						"type": "DelimitedTextSink",
 						"storeSettings": {
 							"type": "AzureBlobFSWriteSettings"
 						},
 						"formatSettings": {
-							"type": "ParquetWriteSettings"
+							"type": "DelimitedTextWriteSettings",
+							"quoteAllText": true,
+							"fileExtension": ".csv"
 						}
 					},
 					"enableStaging": false,
@@ -43,18 +44,18 @@
 				},
 				"inputs": [
 					{
-						"referenceName": "PostgreSqlTable1",
-						"type": "DatasetReference"
+						"referenceName": "DS_Azure_SQL",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaName": "dbo",
+							"tableName": "Customers"
+						}
 					}
 				],
 				"outputs": [
 					{
-						"referenceName": "DS_Parquet_Postgres",
-						"type": "DatasetReference",
-						"parameters": {
-							"container": "landing",
-							"folder": "test"
-						}
+						"referenceName": "DS_ADLS_Customer",
+						"type": "DatasetReference"
 					}
 				]
 			},
