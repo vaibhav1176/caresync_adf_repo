@@ -1,6 +1,12 @@
 {
 	"name": "pracADF1176",
 	"properties": {
+		"globalParameters": {
+			"email_recepient_global": {
+				"type": "string",
+				"value": "vaibhavgupta1176@gmail.com"
+			}
+		},
 		"trustModeClaimForMi": {
 			"value": "Disabled",
 			"editable": true
