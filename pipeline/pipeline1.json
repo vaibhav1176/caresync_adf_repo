@@ -48,7 +48,10 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"schemaName": "dbo",
-							"tableName": "Customers"
+							"tableName": {
+								"value": "@pipeline().parameters.table_name",
+								"type": "Expression"
+							}
 						}
 					}
 				],
