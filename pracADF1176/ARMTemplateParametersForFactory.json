@@ -1,0 +1,39 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "pracADF1176"
+		},
+		"LS_AzureDataLakeStorage_accountKey": {
+			"value": ""
+		},
+		"LS_AzureDataLakeStorage_properties_typeProperties_url": {
+			"value": "https://adls2connect.dfs.core.windows.net/"
+		},
+		"LS_AzureKeyVault_properties_typeProperties_baseUrl": {
+			"value": "https://careSync-keyVault111.vault.azure.net/"
+		},
+		"LS_Azure_SQL_properties_typeProperties_server": {
+			"value": "vaibhav-azure-sql-server.database.windows.net"
+		},
+		"LS_Azure_SQL_properties_typeProperties_database": {
+			"value": "free-sql-db-5141024"
+		},
+		"LS_Azure_SQL_properties_typeProperties_userName": {
+			"value": "vaibhav"
+		},
+		"LS_PostgreSql_properties_typeProperties_server": {
+			"value": "ep-polished-cloud-b3bvjf23-pooler.c-4.ap-southeast-1.aws.neon.tech"
+		},
+		"LS_PostgreSql_properties_typeProperties_database": {
+			"value": "neondb"
+		},
+		"LS_PostgreSql_properties_typeProperties_username": {
+			"value": "neondb_owner"
+		},
+		"LS_careSync_ADLS_properties_typeProperties_url": {
+			"value": "https://adls2connect.dfs.core.windows.net/"
+		}
+	}
+}
