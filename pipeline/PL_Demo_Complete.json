@@ -3,82 +3,6 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Cx table ingest from AS to ADLS",
-				"type": "Copy",
-				"dependsOn": [
-					{
-						"activity": "Read watermark",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					}
-				],
-				"policy": {
-					"timeout": "0.12:00:00",
-					"retry": 0,
-					"retryIntervalInSeconds": 30,
-					"secureOutput": false,
-					"secureInput": false
-				},
-				"userProperties": [],
-				"typeProperties": {
-					"source": {
-						"type": "AzureSqlSource",
-						"sqlReaderQuery": {
-							"value": "select * from dbo.@{pipeline().parameters.table_name_pipeline}\nwhere ModifiedDate > '@{activity('Read watermark').output.firstRow.watermark_value}'",
-							"type": "Expression"
-						},
-						"queryTimeout": "02:00:00",
-						"partitionOption": "None"
-					},
-					"sink": {
-						"type": "DelimitedTextSink",
-						"storeSettings": {
-							"type": "AzureBlobFSWriteSettings"
-						},
-						"formatSettings": {
-							"type": "DelimitedTextWriteSettings",
-							"quoteAllText": true,
-							"fileExtension": ".csv"
-						}
-					},
-					"enableStaging": false,
-					"translator": {
-						"type": "TabularTranslator",
-						"typeConversion": true,
-						"typeConversionSettings": {
-							"allowDataTruncation": true,
-							"treatBooleanAsNumber": false
-						}
-					}
-				},
-				"inputs": [
-					{
-						"referenceName": "DS_Azure_SQL",
-						"type": "DatasetReference",
-						"parameters": {
-							"schemaName": "dbo",
-							"tableName": {
-								"value": "@pipeline().parameters.table_name_pipeline",
-								"type": "Expression"
-							}
-						}
-					}
-				],
-				"outputs": [
-					{
-						"referenceName": "DS_ADLS_Customer",
-						"type": "DatasetReference",
-						"parameters": {
-							"table_name": {
-								"value": "@pipeline().parameters.table_name_pipeline",
-								"type": "Expression"
-							}
-						}
-					}
-				]
-			},
-			{
 				"name": "Read watermark",
 				"type": "Lookup",
 				"dependsOn": [],
@@ -116,7 +40,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Cx table ingest from AS to ADLS",
+						"activity": "Check if there are new records",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -150,7 +74,7 @@
 				"type": "ExecutePipeline",
 				"dependsOn": [
 					{
-						"activity": "Cx table ingest from AS to ADLS",
+						"activity": "Check if there are new records",
 						"dependencyConditions": [
 							"Failed"
 						]
@@ -180,11 +104,11 @@
 				}
 			},
 			{
-				"name": "Update Watermark",
-				"type": "Script",
+				"name": "Check count in Source",
+				"type": "Lookup",
 				"dependsOn": [
 					{
-						"activity": "Cx table ingest from AS to ADLS",
+						"activity": "Read watermark",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -198,21 +122,150 @@
 					"secureInput": false
 				},
 				"userProperties": [],
-				"linkedServiceName": {
-					"referenceName": "LS_Azure_SQL",
-					"type": "LinkedServiceReference"
-				},
 				"typeProperties": {
-					"scripts": [
+					"source": {
+						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select count(*) as count from dbo.@{pipeline().parameters.table_name_pipeline}\nwhere ModifiedDate > '@{activity('Read watermark').output.firstRow.watermark_value}'",
+							"type": "Expression"
+						},
+						"queryTimeout": "02:00:00",
+						"partitionOption": "None"
+					},
+					"dataset": {
+						"referenceName": "DS_Azure_SQL",
+						"type": "DatasetReference",
+						"parameters": {
+							"schemaName": "dbo",
+							"tableName": "Customers"
+						}
+					}
+				}
+			},
+			{
+				"name": "Check if there are new records",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Check count in Source",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(activity('Check count in Source').output.firstRow.count, 0)",
+						"type": "Expression"
+					},
+					"ifTrueActivities": [
 						{
-							"type": "Query",
-							"text": {
-								"value": "update metadata.table_watermarks\nset watermark_value = SYSUTCDATETIME()\nwhere table_name = '@{pipeline().parameters.table_name_pipeline}'",
-								"type": "Expression"
+							"name": "Cx table ingest from AS to ADLS",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "select * from dbo.@{pipeline().parameters.table_name_pipeline}\nwhere ModifiedDate > '@{activity('Read watermark').output.firstRow.watermark_value}'",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "DelimitedTextSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "DelimitedTextWriteSettings",
+										"quoteAllText": true,
+										"fileExtension": ".csv"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "DS_Azure_SQL",
+									"type": "DatasetReference",
+									"parameters": {
+										"schemaName": "dbo",
+										"tableName": {
+											"value": "@pipeline().parameters.table_name_pipeline",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "DS_ADLS_Customer",
+									"type": "DatasetReference",
+									"parameters": {
+										"table_name": {
+											"value": "@pipeline().parameters.table_name_pipeline",
+											"type": "Expression"
+										}
+									}
+								}
+							]
+						},
+						{
+							"name": "Update Watermark",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Cx table ingest from AS to ADLS",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "LS_Azure_SQL",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "update metadata.table_watermarks\nset watermark_value = SYSUTCDATETIME()\nwhere table_name = '@{pipeline().parameters.table_name_pipeline}'",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
 							}
 						}
-					],
-					"scriptBlockExecutionTimeout": "02:00:00"
+					]
 				}
 			}
 		],
