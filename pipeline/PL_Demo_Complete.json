@@ -114,8 +114,6 @@
 			{
 				"name": "Success_Email_Pipeline_Trigger",
 				"type": "ExecutePipeline",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Cx table ingest from AS to ADLS",
@@ -150,8 +148,6 @@
 			{
 				"name": "Failure_Email_Pipeline_Trigger",
 				"type": "ExecutePipeline",
-				"state": "Inactive",
-				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Cx table ingest from AS to ADLS",
