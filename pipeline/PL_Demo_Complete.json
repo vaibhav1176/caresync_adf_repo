@@ -7,7 +7,7 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Read cx table",
+						"activity": "Read watermark",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -24,6 +24,10 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
+						"sqlReaderQuery": {
+							"value": "select * from dbo.@{pipeline().parameters.table_name_pipeline}\nwhere ModifiedDate > '@{activity('Read watermark').output.firstRow.watermark_value}'",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -75,7 +79,7 @@
 				]
 			},
 			{
-				"name": "Read cx table",
+				"name": "Read watermark",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -89,7 +93,10 @@
 				"typeProperties": {
 					"source": {
 						"type": "AzureSqlSource",
-						"sqlReaderQuery": "select * from dbo.customers where CustomerID >2",
+						"sqlReaderQuery": {
+							"value": "select watermark_value from metadata.table_watermarks\nwhere table_name = '@{toLower(pipeline().parameters.table_name_pipeline)}'",
+							"type": "Expression"
+						},
 						"queryTimeout": "02:00:00",
 						"partitionOption": "None"
 					},
@@ -101,12 +108,14 @@
 							"tableName": "Customers"
 						}
 					},
-					"firstRowOnly": false
+					"firstRowOnly": true
 				}
 			},
 			{
 				"name": "Success_Email_Pipeline_Trigger",
 				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Cx table ingest from AS to ADLS",
@@ -141,6 +150,8 @@
 			{
 				"name": "Failure_Email_Pipeline_Trigger",
 				"type": "ExecutePipeline",
+				"state": "Inactive",
+				"onInactiveMarkAs": "Succeeded",
 				"dependsOn": [
 					{
 						"activity": "Cx table ingest from AS to ADLS",
@@ -170,6 +181,42 @@
 						},
 						"status": "Failed"
 					}
+				}
+			},
+			{
+				"name": "Update Watermark",
+				"type": "Script",
+				"dependsOn": [
+					{
+						"activity": "Cx table ingest from AS to ADLS",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"linkedServiceName": {
+					"referenceName": "LS_Azure_SQL",
+					"type": "LinkedServiceReference"
+				},
+				"typeProperties": {
+					"scripts": [
+						{
+							"type": "Query",
+							"text": {
+								"value": "update metadata.table_watermarks\nset watermark_value = SYSUTCDATETIME()\nwhere table_name = '@{pipeline().parameters.table_name_pipeline}'",
+								"type": "Expression"
+							}
+						}
+					],
+					"scriptBlockExecutionTimeout": "02:00:00"
 				}
 			}
 		],
